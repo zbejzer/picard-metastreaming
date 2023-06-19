@@ -24,21 +24,37 @@
 PLUGIN_NAME = "Streaming Metadata"
 PLUGIN_AUTHOR = "Stanislaw Borodziuk"
 PLUGIN_DESCRIPTION = "Get metadata from streaming services"
-PLUGIN_VERSION = '0.1.0'
+PLUGIN_VERSION = "0.1.0"
 PLUGIN_API_VERSIONS = ["2.0", "2.1", "2.2"]
 PLUGIN_LICENSE = "GPL-3.0-or-later"
 PLUGIN_LICENSE_URL = "https://www.gnu.org/licenses/gpl-3.0.html"
 
-import spotipy
-from spotipy.oauth2 import SpotifyOAuth
+from picard.config import (
+    TextOption,
+)
+from picard.ui.options import (
+    register_options_page,
+    OptionsPage,
+)
+from .ui_options_streaming_metadata import Ui_StreamingMetadataOptionsPage
 
-from picard.ui.options import register_options_page, OptionsPage
 
 class StreamingOptionsPage(OptionsPage):
 
     NAME = "streaming_metadata"
     TITLE = "Streaming Metadata"
-    PARENT = "plugins"
+    PARENT = "metadata"
     ACTIVE = True
+
+    options = [
+        TextOption("setting", "client_id", "Client ID"),
+        TextOption("setting", "client_secret", "Client Secret"),
+    ]
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.ui = Ui_StreamingMetadataOptionsPage()
+        self.ui.setupUi(self)
+
 
 register_options_page(StreamingOptionsPage)
