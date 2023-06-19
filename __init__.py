@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>
 #
-# Requires spotipy package: https://pypi.org/project/spotipy/
+# Requires spotpy package: https://pypi.org/project/spotipy/
 #
 # Changelog:
 # [2023-06-17] Initial version
@@ -29,12 +29,15 @@ PLUGIN_API_VERSIONS = ["2.0", "2.1", "2.2"]
 PLUGIN_LICENSE = "GPL-3.0-or-later"
 PLUGIN_LICENSE_URL = "https://www.gnu.org/licenses/gpl-3.0.html"
 
+import picard
+from picard import config
 from picard.config import (
     TextOption,
+    get_config,
 )
 from picard.ui.options import (
-    register_options_page,
     OptionsPage,
+    register_options_page,
 )
 from .ui_options_streaming_metadata import Ui_StreamingMetadataOptionsPage
 
@@ -47,14 +50,24 @@ class StreamingOptionsPage(OptionsPage):
     ACTIVE = True
 
     options = [
-        TextOption("setting", "client_id", "Client ID"),
-        TextOption("setting", "client_secret", "Client Secret"),
+        TextOption("setting", "spotify_id", ""),
+        TextOption("setting", "spotify_secret", ""),
     ]
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.ui = Ui_StreamingMetadataOptionsPage()
         self.ui.setupUi(self)
+
+    def load(self):
+        config = get_config()
+        self.ui.spotify_id.setText(config.setting["spotify_id"])
+        self.ui.spotify_secret.setText(config.setting["spotify_secret"])
+
+    def save(self):
+        config = get_config()
+        config.setting["spotify_id"] = self.ui.spotify_id.text()
+        config.setting["spotify_secret"] = self.ui.spotify_secret.text()
 
 
 register_options_page(StreamingOptionsPage)
