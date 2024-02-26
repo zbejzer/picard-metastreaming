@@ -52,15 +52,15 @@ class GetMetaStreaming(BaseAction):
     def callback(self, objs):
         log.debug("MetaStreaming BaseAction executed")
         obj = objs[0]
+        # Working
         # for file in obj.files:
         #     log.debug(file.metadata["title"])
 
-        # objs[0].metadata["album"]
         # dialog = MetaStreamingSearchDialog(obj)
         # dialog.exec_()
 
 
-""" class MetaStreamingSearchDialog(SearchDialog):
+class MetaStreamingSearchDialog(SearchDialog):
 
     dialog_header_state = "metastreamingsearchdialog_header_state"
 
@@ -76,7 +76,7 @@ class GetMetaStreaming(BaseAction):
             ("source", _("Source")),
             ("album", _("Album")),
             ("artist", _("Artist")),
-        ] """
+        ]
 
 
 class MetaStreamingOptionsPage(OptionsPage):
