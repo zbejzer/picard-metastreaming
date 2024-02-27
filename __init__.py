@@ -40,12 +40,6 @@ from picard.plugins.metastreaming.ui_options_streaming_metadata import (
 )
 
 
-""" class MetaStreamingPlugin:
-
-    def process_cluster(self, album, metadata, release):
-        recording_ids = self.get_recording_ids(release) """
-
-
 class GetMetaStreaming(BaseAction):
     NAME = "Get metadata from streamings"
 
@@ -56,8 +50,8 @@ class GetMetaStreaming(BaseAction):
         # for file in obj.files:
         #     log.debug(file.metadata["title"])
 
-        # dialog = MetaStreamingSearchDialog(obj)
-        # dialog.exec_()
+        dialog = MetaStreamingSearchDialog(obj)
+        dialog.exec_()
 
 
 class MetaStreamingSearchDialog(SearchDialog):
@@ -66,17 +60,43 @@ class MetaStreamingSearchDialog(SearchDialog):
 
     options = [Option("persist", dialog_header_state, QtCore.QByteArray())]
 
-    def __init__(self, parent, force_advanced_search=None):
+    def __init__(self, cluster, parent=None):
         super().__init__(
             parent,
             accept_button_title=_("Select for metadata source"),
+            force_advanced_search=True,
         )
+        self.cluster = cluster
         self.setWindowTitle(_("MetaStreaming Search Results"))
         self.columns = [
-            ("source", _("Source")),
-            ("album", _("Album")),
+            ("name", _("Name")),
             ("artist", _("Artist")),
+            ("tracks", _("Tracks")),
+            ("cover", _("Cover")),
         ]
+        self.cover_cells = []
+        self.fetching = False
+        self.scrolled.connect(self.fetch_coverarts)
+        log.debug("MetaStreamingSearchDialog __init__")
+
+    def search(self, text):
+        log.debug(text)
+        # self.cluster.tagger.webservice.get_url(
+        #     url=CAA_URL + self._caa_path,
+        #     handler=self._caa_json_downloaded,
+        #     priority=True,
+        #     important=False,
+        #     cacheloadcontrol=QNetworkRequest.CacheLoadControl.PreferNetwork,
+        # )
+
+    def fetch_coverarts(self):
+        log.debug("fetch_coverarts placeholder function")
+
+    def fetch_coverart(self, cell):
+        log.debug("fetch_coverart placeholder function")
+
+    def accept_event(self, rows):
+        log.debug("accept_event placeholder function")
 
 
 class MetaStreamingOptionsPage(OptionsPage):
