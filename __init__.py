@@ -38,7 +38,9 @@ from picard.ui.searchdialog import Retry, SearchDialog
 from picard.plugins.metastreaming.ui_options_streaming_metadata import (
     Ui_StreamingMetadataOptionsPage,
 )
+import re
 
+SPOTIFY_API_URL = "api.spotify.com"
 
 class GetMetaStreaming(BaseAction):
     NAME = "Get metadata from streamings"
@@ -81,6 +83,24 @@ class MetaStreamingSearchDialog(SearchDialog):
 
     def search(self, text):
         log.debug(text)
+        spotify_data = self.parse_spotify_url(text)
+        if spotify_data is None:
+            return
+
+        query_args = {
+            'apikey': apikey,
+            'track_mbid': metadata['musicbrainz_recordingid']
+        }
+        self.cluster.tagger.webservice.get(
+            MUSIXMATCH_HOST,
+            MUSIXMATCH_PORT,
+            "/ws/1.1/track.lyrics.get",
+            partial(handle_result, album, metadata),
+            parse_response_type='json',
+            queryargs=queryargs
+        )
+
+
         # self.cluster.tagger.webservice.get_url(
         #     url=CAA_URL + self._caa_path,
         #     handler=self._caa_json_downloaded,
@@ -97,6 +117,20 @@ class MetaStreamingSearchDialog(SearchDialog):
 
     def accept_event(self, rows):
         log.debug("accept_event placeholder function")
+
+    def parse_spotify_url(self, url):
+        """Extract resource type and id from a spotify url.
+        It returns a dict with resource and id keys on success, None else
+        """
+        r = re.compile(r'^https?://(?:www.)?open.spotify.com/(?P<resource>[A-Za-z]+)/(?P<id>[A-Za-z0-9]+)\??')
+        match = r.match(url)
+        if match is not None:
+            return match.groupdict()
+        return None
+
+    def _spotify_url(self, spotify_data):
+        # https://api.spotify.com/v1/albums/{id}
+        return "/v1/albums/{}".format(spotify_data["id"])
 
 
 class MetaStreamingOptionsPage(OptionsPage):
