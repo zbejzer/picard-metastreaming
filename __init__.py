@@ -29,6 +29,10 @@ PLUGIN_LICENSE = "GPL-3.0-or-later"
 PLUGIN_LICENSE_URL = "https://www.gnu.org/licenses/gpl-3.0.html"
 
 from PyQt5 import QtCore
+from PyQt5.QtNetwork import (
+    QNetworkReply,
+    QNetworkRequest,
+)
 from picard import log, config
 from picard.config import Option, get_config
 from picard.album import Album
@@ -40,7 +44,8 @@ from picard.plugins.metastreaming.ui_options_streaming_metadata import (
 )
 import re
 
-SPOTIFY_API_URL = "api.spotify.com"
+DEEZER_API_URL = "api.deezer.com"
+DEEZER_API_PORT = 443
 
 class GetMetaStreaming(BaseAction):
     NAME = "Get metadata from streamings"
@@ -79,25 +84,20 @@ class MetaStreamingSearchDialog(SearchDialog):
         self.cover_cells = []
         self.fetching = False
         self.scrolled.connect(self.fetch_coverarts)
-        log.debug("MetaStreamingSearchDialog __init__")
+        self.metadata = []
 
     def search(self, text):
         log.debug(text)
-        spotify_data = self.parse_spotify_url(text)
-        if spotify_data is None:
+        self.metadata = self.parse_deezer_url(text)
+        if self.metadata is None:
             return
 
-        query_args = {
-            'apikey': apikey,
-            'track_mbid': metadata['musicbrainz_recordingid']
-        }
-        self.cluster.tagger.webservice.get(
-            MUSIXMATCH_HOST,
-            MUSIXMATCH_PORT,
-            "/ws/1.1/track.lyrics.get",
-            partial(handle_result, album, metadata),
-            parse_response_type='json',
-            queryargs=queryargs
+        self.cluster.tagger.webservice.get_url(
+            url=DEEZER_API_URL + self._deezer_album_url(),
+            handler=self._caa_json_downloaded,
+            priority=True,
+            important=False,
+            cacheloadcontrol=QNetworkRequest.CacheLoadControl.PreferNetwork,
         )
 
 
@@ -118,19 +118,19 @@ class MetaStreamingSearchDialog(SearchDialog):
     def accept_event(self, rows):
         log.debug("accept_event placeholder function")
 
-    def parse_spotify_url(self, url):
-        """Extract resource type and id from a spotify url.
+    def parse_deezer_url(self, url):
+        """Extract language, resource type and id from a deezer url.
         It returns a dict with resource and id keys on success, None else
         """
-        r = re.compile(r'^https?://(?:www.)?open.spotify.com/(?P<resource>[A-Za-z]+)/(?P<id>[A-Za-z0-9]+)\??')
+        r = re.compile(r'^https?://(?:www.)?deezer.com(?:/(?P<language>.+))?/(?P<service>[A-Za-z]+)/(?P<id>[A-Za-z0-9]+)')
         match = r.match(url)
         if match is not None:
             return match.groupdict()
         return None
 
-    def _spotify_url(self, spotify_data):
-        # https://api.spotify.com/v1/albums/{id}
-        return "/v1/albums/{}".format(spotify_data["id"])
+    def _deezer_album_url(self):
+        # https://api.deezer.com/version/service/id/method/?parameters
+        return "/{}/{}".format(self.metadata["service"], self.metadata["id"])
 
 
 class MetaStreamingOptionsPage(OptionsPage):
